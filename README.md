@@ -170,3 +170,222 @@ The tool includes built-in validation to ensure data quality:
 - **Orphaned Annotation Detection**: Identifies and reports annotation issues
 
 This comprehensive tool transforms complex geospatial data into machine learning-ready formats, enabling researchers and practitioners to leverage building footprint data for computer vision applications at scale.
+
+
+# GDAL Retile Script Usage Guide
+
+## Overview
+
+This interactive script helps you tile large GeoTIFF images into smaller, uniform tiles suitable for machine learning datasets. It's particularly useful for preparing satellite or aerial imagery for computer vision tasks.
+
+## Installation
+
+### Prerequisites
+
+First, ensure GDAL tools are installed:
+
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install gdal-bin
+
+# CentOS/RHEL
+sudo yum install gdal
+
+# macOS
+brew install gdal
+
+# Verify installation
+gdal_retile.py --help
+```
+
+### Download the Script
+
+```bash
+# Make the script executable
+chmod +x gdal_retile.sh
+```
+
+## Usage
+
+### Interactive Mode (Recommended)
+
+Simply run the script and follow the prompts:
+
+```bash
+./gdal_retile.sh
+```
+
+The script will guide you through:
+1. Input GeoTIFF file selection
+2. Output directory setup
+3. Tile size configuration
+4. Overlap settings
+5. Optional CSV metadata generation
+
+### Command Line Mode
+
+For automation or batch processing:
+
+```bash
+# Basic usage
+./gdal_retile.sh -i input.tif -o tiles/
+
+# With custom settings
+./gdal_retile.sh -i input.tif -o tiles/ -s 512 -v 32 --csv metadata.csv
+
+# Batch mode (non-interactive)
+./gdal_retile.sh --batch -i input.tif -o tiles/ -s 640 -v 64
+```
+
+## Parameters
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `-i, --input` | Input GeoTIFF file | Required |
+| `-o, --output` | Output directory for tiles | Required |
+| `-s, --size` | Tile size in pixels | 640 |
+| `-v, --overlap` | Overlap size in pixels | 64 |
+| `--csv` | CSV metadata file name | Optional |
+| `--batch` | Run in non-interactive mode | false |
+| `-h, --help` | Show help message | - |
+
+## Examples
+
+### Example 1: Basic Tiling
+
+```bash
+./gdal_retile.sh -i satellite_image.tif -o tiles/
+```
+
+This creates 640x640 pixel tiles with 64 pixel overlap.
+
+### Example 2: Custom Tile Size
+
+```bash
+./gdal_retile.sh -i aerial_photo.tif -o custom_tiles/ -s 512 -v 32
+```
+
+Creates 512x512 pixel tiles with 32 pixel overlap.
+
+### Example 3: With Metadata
+
+```bash
+./gdal_retile.sh -i large_image.tif -o tiles/ --csv tile_metadata.csv
+```
+
+Generates tiles and saves metadata information to CSV file.
+
+### Example 4: Batch Processing
+
+```bash
+# Process multiple files
+for file in *.tif; do
+    ./gdal_retile.sh --batch -i "$file" -o "tiles_${file%.*}/"
+done
+```
+
+## Output Structure
+
+After running the script, you'll have:
+
+```
+output_directory/
+├── tile_1_1.tif
+├── tile_1_2.tif
+├── tile_2_1.tif
+├── tile_2_2.tif
+└── ...
+```
+
+If CSV metadata is enabled:
+```
+metadata.csv  # Contains tile information and coordinates
+```
+
+## Common Use Cases
+
+### 1. Satellite Image Processing
+- **Input**: Large satellite imagery (e.g., 10000x10000 pixels)
+- **Output**: Manageable tiles for ML training
+- **Settings**: 640x640 tiles, 64px overlap
+
+### 2. Aerial Photography
+- **Input**: High-resolution aerial photos
+- **Output**: Tiles for object detection
+- **Settings**: 512x512 tiles, 32px overlap
+
+### 3. Urban Planning Data
+- **Input**: City-wide imagery
+- **Output**: Tiles for building detection
+- **Settings**: 640x640 tiles, 64px overlap + metadata
+
+## Tips and Best Practices
+
+### Choosing Tile Size
+- **640x640**: Good for most ML applications
+- **512x512**: Faster processing, less memory usage
+- **1024x1024**: Better for large object detection
+
+### Overlap Settings
+- **64 pixels**: Recommended for object detection
+- **32 pixels**: Sufficient for classification tasks
+- **128 pixels**: Better for large objects
+
+### Memory Considerations
+- Larger tiles require more memory
+- Start with smaller tiles if you encounter memory issues
+- Monitor disk space for large datasets
+
+## Integration with GeoTIFF to COCO Converter
+
+This script works perfectly with the GeoTIFF to COCO converter:
+
+```bash
+# 1. Tile your large image
+./gdal_retile.sh -i large_image.tif -o tiles/
+
+# 2. Convert to COCO format
+python geo_to_coco.py --images tiles/ --csv buildings.csv --output dataset.json
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Permission Denied**
+   ```bash
+   chmod +x gdal_retile.sh
+   ```
+
+2. **GDAL Not Found**
+   - Install GDAL tools (see Installation section)
+   - Check PATH environment variable
+
+3. **Insufficient Disk Space**
+   - Tiling can create many files
+   - Ensure adequate disk space (typically 2-3x original file size)
+
+4. **Memory Issues**
+   - Reduce tile size
+   - Process smaller sections of the image
+
+### Error Messages
+
+- `File does not exist`: Check input file path
+- `Directory not writable`: Check output directory permissions
+- `Invalid tile size`: Ensure size is a positive integer
+- `GDAL command failed`: Check GDAL installation and input file format
+
+## Support
+
+For issues or questions:
+1. Check the troubleshooting section
+2. Review GDAL documentation
+3. Open an issue on the GitHub repository
+
+## Related Tools
+
+- **GeoTIFF to COCO Converter**: Convert tiled images to ML datasets
+- **QGIS**: Visualize and prepare geospatial data
+- **OSMnx**: Extract building data from OpenStreetMap
